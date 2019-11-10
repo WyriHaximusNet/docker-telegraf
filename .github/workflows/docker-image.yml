@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - master
+  schedule:
+    - cron:  '59 23 * * 0'
 jobs:
   lint-dockerfile:
     runs-on: ubuntu-latest
