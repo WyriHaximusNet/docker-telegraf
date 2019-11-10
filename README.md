@@ -1,4 +1,4 @@
-# docker-telegraf
+# docker telegraf
 
 Opinionated Telegraf Docker images
 
