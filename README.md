@@ -2,6 +2,26 @@
 
 Opinionated Telegraf Docker images
 
+# I/O
+
+This container has the following Telegraf Inputs and Outputs build in:
+
+## Inputs
+
+* [kubernetes](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/kubernetes)
+* [ping](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/ping)
+* [redis](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/redis)
+* [unbound](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/unbound)
+* [x509_cert](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/x509_cert)
+
+## Outputs
+
+* [influxdb](https://github.com/influxdata/telegraf/tree/master/plugins/outputs/influxdb)
+
+# Credits
+
+This project is based on [David McKay](https://github.com/rawkode)'s [Build Your Own Telegraf](https://github.com/rawkode/bring-your-own-telegraf).
+
 # License
 
 Copyright (c) 2019 Cees-Jan Kiewiet
