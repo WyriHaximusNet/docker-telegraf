@@ -1,6 +1,6 @@
 # docker telegraf
 
-Opinionated Telegraf Docker images
+Opinionated Telegraf Docker images. The image is available on Docker Hub as [wyrihaximusnet/telegraf](https://hub.docker.com/r/wyrihaximusnet/telegraf).
 
 # I/O
 
