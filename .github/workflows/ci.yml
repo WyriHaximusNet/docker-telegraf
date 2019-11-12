@@ -1,4 +1,4 @@
-name: Continious Integration
+name: Continuous Integration
 env:
   DOCKER_IMAGE: wyrihaximusnet/telegraf
   TAG_VERSION: 1.12
