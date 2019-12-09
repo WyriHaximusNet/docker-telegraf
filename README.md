@@ -16,6 +16,7 @@ This container has the following Telegraf Inputs and Outputs build in:
 
 ## Outputs
 
+* [health](https://github.com/influxdata/telegraf/tree/master/plugins/outputs/health)
 * [influxdb](https://github.com/influxdata/telegraf/tree/master/plugins/outputs/influxdb)
 
 # Credits
