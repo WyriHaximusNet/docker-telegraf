@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - run: docker image build -t "${DOCKER_IMAGE}:${TAG_VERSION}" . --no-cache --build-arg VERSION=$TAG_VERSION
+      - run: docker image build --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF=`git rev-parse --short HEAD` -t "${DOCKER_IMAGE}:${TAG_VERSION}" . --no-cache --build-arg VERSION=$TAG_VERSION
       - run: mkdir ./docker-image
       - run: docker save "${DOCKER_IMAGE}:${TAG_VERSION}" -o ./docker-image/docker_image.tar
       - uses: actions/upload-artifact@master
