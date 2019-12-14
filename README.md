@@ -8,6 +8,7 @@ This container has the following Telegraf Inputs and Outputs build in:
 
 ## Inputs
 
+* [internal](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/internal)
 * [kubernetes](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/kubernetes)
 * [ping](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/ping)
 * [redis](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/redis)
