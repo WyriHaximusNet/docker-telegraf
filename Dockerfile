@@ -1,6 +1,6 @@
 FROM rawkode/telegraf:byo AS build
 
-FROM alpine:3.10 AS telegraf
+FROM alpine:3.11 AS telegraf
 
 # Build-time metadata as defined at http://label-schema.org
 ARG BUILD_DATE
