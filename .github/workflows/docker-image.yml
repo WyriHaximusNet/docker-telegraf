@@ -1,7 +1,6 @@
 name: Docker Image
 env:
   DOCKER_IMAGE: wyrihaximusnet/telegraf
-  TAG_VERSION: 1.12
 on:
   push:
     branches:
@@ -22,18 +21,24 @@ jobs:
     needs:
       - lint-dockerfile
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        telegraf: ['1.12', '1.14']
     steps:
       - uses: actions/checkout@v1
-      - run: docker image build --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF=`git rev-parse --short HEAD` -t "${DOCKER_IMAGE}:${TAG_VERSION}" . --no-cache --build-arg VERSION=$TAG_VERSION
+      - run: docker image build --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF=`git rev-parse --short HEAD` -t "${DOCKER_IMAGE}:${{ matrix.telegraf }}" . --no-cache --build-arg VERSION=${{ matrix.telegraf }}
       - run: mkdir ./docker-image
-      - run: docker save "${DOCKER_IMAGE}:${TAG_VERSION}" -o ./docker-image/docker_image.tar
+      - run: docker save "${DOCKER_IMAGE}:${{ matrix.telegraf }}" -o ./docker-image/docker_image.tar
       - uses: actions/upload-artifact@master
         with:
-          name: docker-image
+          name: docker-image-${{ matrix.telegraf }}
           path: ./docker-image
   scan-vulnerability:
     needs: build-docker-image
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        telegraf: ['1.12', '1.14']
     steps:
       - uses: actions/checkout@v1
       - name: Install clair-scanner
@@ -42,7 +47,7 @@ jobs:
           sudo chmod +x /usr/local/bin/clair-scanner
       - uses: actions/download-artifact@master
         with:
-          name: docker-image
+          name: docker-image-${{ matrix.telegraf }}
           path: ./docker-image
       - run: docker load --input ./docker-image/docker_image.tar
       - run: rm -Rf ./docker-image/
@@ -50,15 +55,18 @@ jobs:
       - run: docker-compose -f .docker/security/docker-compose.yml -p clair-ci up -d
 #      - run: RETRIES=0 && while ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ; do sleep 1 ; echo -n "." ; if [ $${RETRIES} -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; RETRIES=$$(($${RETRIES}+1)) ; done
       - run: sleep 10
-      - run: echo -e "${DOCKER_IMAGE}:${TAG_VERSION}" | xargs -I % sh -c 'clair-scanner --ip 172.17.0.1 -r "./clair/%.json" -l ./clair/clair.log % || (echo "% is vulnerable" && exit 1)'
+      - run: echo -e "${DOCKER_IMAGE}:${{ matrix.telegraf }}" | xargs -I % sh -c 'clair-scanner --ip 172.17.0.1 -r "./clair/%.json" -l ./clair/clair.log % || (echo "% is vulnerable" && exit 1)'
       - run: docker-compose -f .docker/security/docker-compose.yml -p clair-ci down
   push-image:
     needs: scan-vulnerability
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        telegraf: ['1.12', '1.14']
     steps:
       - uses: actions/download-artifact@master
         with:
-          name: docker-image
+          name: docker-image-${{ matrix.telegraf }}
           path: ./docker-image
       - run: docker load --input ./docker-image/docker_image.tar
       - run: rm -Rf ./docker-image/
@@ -71,6 +79,6 @@ jobs:
       - name: Docker info
         run: docker info
       - name: Echo full tag
-        run: echo -e "${DOCKER_IMAGE}:${TAG_VERSION}"
+        run: echo -e "${DOCKER_IMAGE}:${{ matrix.telegraf }}"
       - name: Push image to Docker Hub
-        run: docker push "${DOCKER_IMAGE}:${TAG_VERSION}"
+        run: docker push "${DOCKER_IMAGE}:${{ matrix.telegraf }}"
