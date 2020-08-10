@@ -13,12 +13,11 @@ jobs:
           entrypoint: hadolint
           args: Dockerfile
   build-docker-image:
-    needs:
-      - lint-dockerfile
+    needs: lint-dockerfile
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        telegraf: ['1.12', '1.14']
+        telegraf: ['1.12', '1.13', '1.14', '1.15']
     steps:
       - uses: actions/checkout@v1
       - run: docker image build --build-arg TAG_VERSION=${{ matrix.telegraf }} -t "${DOCKER_IMAGE}:${{ matrix.telegraf }}" . --no-cache --build-arg VERSION=${{ matrix.telegraf }}
@@ -33,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        telegraf: ['1.12', '1.14']
+        telegraf: ['1.12', '1.13', '1.14', '1.15']
     steps:
       - uses: actions/checkout@v1
       - name: Install clair-scanner
