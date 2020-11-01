@@ -1,6 +1,7 @@
 name: Docker Image
 env:
   DOCKER_IMAGE: wyrihaximusnet/telegraf
+  DOCKER_IMAGE_REGISTRIES_SECRET_MAPPING: '{"ghcr.io":"GHCR_TOKEN","docker.io":"HUB_PASSCODE"}'
 on:
   push:
     branches:
@@ -8,6 +9,17 @@ on:
   schedule:
     - cron:  '59 23 * * 0'
 jobs:
+  registry-matrix:
+    name: Extract registries from registry secret mapping
+    runs-on: ubuntu-latest
+    outputs:
+      registry: ${{ steps.registry-matrix.outputs.registry }}
+    steps:
+      - uses: actions/checkout@v1
+      - id: registry-matrix
+        name: Extract registries from registry secret mapping
+        run: |
+          echo "::set-output name=registry::$(printenv DOCKER_IMAGE_REGISTRIES_SECRET_MAPPING | jq -c 'keys')"
   lint-dockerfile:
     runs-on: ubuntu-latest
     steps:
@@ -58,10 +70,14 @@ jobs:
       - run: echo -e "${DOCKER_IMAGE}:${{ matrix.telegraf }}" | xargs -I % sh -c 'clair-scanner --ip 172.17.0.1 -r "./clair/%.json" -l ./clair/clair.log % || (echo "% is vulnerable" && exit 1)'
       - run: docker-compose -f .docker/security/docker-compose.yml -p clair-ci down
   push-image:
-    needs: scan-vulnerability
+    needs:
+      - scan-vulnerability
+      - registry-matrix
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        registry: ${{ fromJson(needs.registry-matrix.outputs.registry) }}
         telegraf: ['1.12', '1.14']
     steps:
       - uses: actions/download-artifact@master
@@ -72,13 +88,17 @@ jobs:
       - run: rm -Rf ./docker-image/
       - name: Login to Docker Hub
         run: |
-          echo "${{ secrets.HUB_PASSCODE }}" | \
-          docker login \
-            --username "${{ secrets.HUB_USERNAME }}" \
+          echo "${{ env.DOCKER_PASSWORD }}" | \
+          docker login ${{ matrix.registry }} \
+            --username "${{ env.DOCKER_USER }}" \
             --password-stdin
+        env:
+          DOCKER_USER: ${{ secrets.HUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets[fromJson(env.DOCKER_IMAGE_REGISTRIES_SECRET_MAPPING)[matrix.registry]] }}
       - name: Docker info
         run: docker info
+      - run: docker tag ${DOCKER_IMAGE}:${{ matrix.telegraf }} ${{ matrix.registry }}/${DOCKER_IMAGE}:${{ matrix.telegraf }}
       - name: Echo full tag
-        run: echo -e "${DOCKER_IMAGE}:${{ matrix.telegraf }}"
+        run: echo -e "${{ matrix.registry }}/${DOCKER_IMAGE}:${{ matrix.telegraf }}"
       - name: Push image to Docker Hub
-        run: docker push "${DOCKER_IMAGE}:${{ matrix.telegraf }}"
+        run: docker push "${{ matrix.registry }}/${DOCKER_IMAGE}:${{ matrix.telegraf }}"
